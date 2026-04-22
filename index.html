@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的小说站</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --primary-dark: #3a5a8a;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --gray: #95a5a6;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #e0e0e0;
+            --read-bg: #fdf8f0;
+            --read-text: #3a3228;
+        }
+        .dark {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #e0e0e0;
+            --text-light: #a0a0b0;
+            --border: #2a2a4a;
+            --read-bg: #0f0f1e;
+            --read-text: #d4c9b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+        }
+
+        /* ===== 导航栏 ===== */
+        nav {
+            background-color: var(--card-bg);
+            padding: 0.9rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav h1 { color: var(--primary); font-size: 1.4rem; letter-spacing: 1px; }
+        .nav-btns { display: flex; gap: 8px; align-items: center; }
+        .btn {
+            border: none;
+            padding: 0.45rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .btn-primary { background-color: var(--primary); color: #fff; }
+        .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
+        .btn-success { background-color: var(--success); color: #fff; }
+        .btn-success:hover { filter: brightness(1.1); }
+        .btn-danger { background-color: var(--danger); color: #fff; }
+        .btn-danger:hover { filter: brightness(1.1); }
+        .btn-gray { background-color: var(--gray); color: #fff; }
+        .btn-gray:hover { filter: brightness(1.1); }
+        .btn-warn { background-color: var(--warning); color: #fff; }
+        .btn-warn:hover { filter: brightness(1.1); }
+        .btn-icon {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            padding: 0.4rem 0.7rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ===== 容器 ===== */
+        .container { max-width: 860px; margin: 1.8rem auto; padding: 0 1rem; }
+
+        /* ===== 搜索栏 ===== */
+        #search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.2rem;
+        }
+        #search-input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.95rem;
+            background: var(--card-bg);
+            color: var(--text);
+            outline: none;
+            transition: border 0.2s;
+        }
+        #search-input:focus { border-color: var(--primary); }
+
+        /* ===== 写作区域 ===== */
+        #write-section {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: none;
+        }
+        #write-section h2 { margin-bottom: 1.2rem; color: var(--primary); }
+        #write-section input,
+        #write-section textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            transition: border 0.2s;
+        }
+        #write-section input:focus,
+        #write-section textarea:focus { border-color: var(--primary); }
+        #write-section textarea { height: 350px; resize: vertical; line-height: 1.8; }
+        .write-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        #word-count { color: var(--text-light); font-size: 0.85rem; }
+
+        /* ===== 小说列表 ===== */
+        #list-section { display: block; }
+        #list-section > h2 { margin-bottom: 1rem; }
+        .empty-tip {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+            color: var(--text-light);
+        }
+        .empty-tip .emoji { font-size: 3rem; margin-bottom: 1rem; }
+
+        .novel-card {
+            background-color: var(--card-bg);
+            padding: 1.3rem 1.5rem;
+            margin-bottom: 0.9rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid var(--primary);
+            gap: 12px;
+        }
+        .novel-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .novel-info { flex: 1; cursor: pointer; }
+        .novel-info h3 { color: var(--text); margin-bottom: 0.3rem; font-size: 1.05rem; }
+        .novel-info p { color: var(--text-light); font-size: 0.82rem; }
+        .novel-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .novel-actions button { padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 14px; }
+
+        /* ===== 阅读区域 ===== */
+        #read-section {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: none;
+        }
+        .read-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .read-header-left { display: flex; align-items: center; gap: 10px; }
+        #read-title { color: var(--primary); font-size: 1.5rem; }
+        #read-meta { color: var(--text-light); font-size: 0.82rem; margin-bottom: 1rem; }
+
+        /* 字体大小控制 */
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.2rem;
+        }
+        .font-controls span { font-size: 0.85rem; color: var(--text-light); }
+
+        #read-content {
+            line-height: 2;
+            font-size: 1.1rem;
+            color: var(--read-text);
+            white-space: pre-wrap;
+            background: var(--read-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        /* 阅读进度条 */
+        #progress-bar-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 200;
+        }
+        #progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* ===== 确认弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal h3 { margin-bottom: 0.8rem; color: var(--text); }
+        .modal p { color: var(--text-light); margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+
+        /* ===== Toast ===== */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(60px);
+            background: #2c3e50;
+            color: #fff;
+            padding: 0.7rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ===== 统计卡片 ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 1.4rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+        }
+        .stat-card .num { font-size: 1.6rem; font-weight: bold; color: var(--primary); }
+        .stat-card .label { font-size: 0.8rem; color: var(--text-light); }
+
+        @media (max-width: 500px) {
+            nav h1 { font-size: 1.1rem; }
+            .stats { grid-template-columns: repeat(3, 1fr); }
+            .novel-card { flex-direction: column; align-items: flex-start; }
+            .novel-actions { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 阅读进度条 -->
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+
+    <!-- 导航栏 -->
+    <nav>
+        <h1>📖 我的小说站</h1>
+        <div class="nav-btns">
+            <button class="btn btn-primary" id="btn-list">小说列表</button>
+            <button class="btn btn-success" id="btn-write">✏️ 写小说</button>
+            <button class="btn-icon" id="btn-dark" title="切换暗色模式">🌙</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- 写作区域 -->
+        <div id="write-section">
+            <h2 id="write-title">✏️ 创作新小说</h2>
+            <input type="text" id="novel-title" placeholder="输入小说标题...">
+            <textarea id="novel-content" placeholder="在这里写小说内容..."></textarea>
+            <div class="write-footer">
+                <span id="word-count">字数：0</span>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-gray" onclick="cancelEdit()">取消</button>
+                    <button class="btn btn-success" onclick="saveNovel()">💾 保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 小说列表区域 -->
+        <div id="list-section">
+
+            <!-- 统计信息 -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="num" id="stat-count">0</div>
+                    <div class="label">篇小说</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="stat-words">0</div>
+                    <div class="label">总字数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="stat-latest">—</div>
+                    <div class="label">最近更新</div>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div id="search-bar">
+                <input type="text" id="search-input" placeholder="🔍 搜索小说标题...">
+            </div>
+
+            <div id="novel-list"></div>
+        </div>
+
+        <!-- 阅读区域 -->
+        <div id="read-section">
+            <div class="read-header">
+                <div class="read-header-left">
+                    <button class="btn btn-gray" onclick="showList()">← 返回</button>
+                    <h2 id="read-title"></h2>
+                </div>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn btn-warn" onclick="editCurrentNovel()">✏️ 编辑</button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">🗑 删除</button>
+                </div>
+            </div>
+            <div id="read-meta"></div>
+            <div class="font-controls">
+                <span>字体大小：</span>
+                <button class="btn btn-gray" style="padding:0.25rem 0.6rem;border-radius:4px;" onclick="changeFontSize(-1)">A−</button>
+                <button class="btn btn-gray" style="padding:0.25rem 0.6rem;border-radius:4px;" onclick="changeFontSize(1)">A+</button>
+            </div>
+            <div id="read-content"></div>
+        </div>
+
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <h3>确认删除</h3>
+            <p>删除后无法恢复，确定要删除这篇小说吗？</p>
+            <div class="modal-btns">
+                <button class="btn btn-gray" onclick="closeModal()">取消</button>
+                <button class="btn btn-danger" onclick="deleteNovel()">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast"></div>
+
+    <script>
+        // ===== 数据管理 =====
+        let novels = JSON.parse(localStorage.getItem('novels')) || [];
+        let currentId = null;
+        let editingId = null;
+        let fontSize = parseInt(localStorage.getItem('fontSize')) || 18;
+
+        // ===== Toast 提示 =====
+        function showToast(msg, duration = 2000) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), duration);
+        }
+
+        // ===== 暗色模式 =====
+        const darkBtn = document.getElementById('btn-dark');
+        if (localStorage.getItem('dark') === '1') {
+            document.body.classList.add('dark');
+            darkBtn.textContent = '☀️';
+        }
+        darkBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('dark', isDark ? '1' : '0');
+            darkBtn.textContent = isDark ? '☀️' : '🌙';
+        });
+
+        // ===== 页面切换 =====
+        document.getElementById('btn-write').addEventListener('click', () => {
+            editingId = null;
+            document.getElementById('write-title').textContent = '✏️ 创作新小说';
+            document.getElementById('novel-title').value = '';
+            document.getElementById('novel-content').value = '';
+            updateWordCount();
+            showSection('write');
+        });
+        document.getElementById('btn-list').addEventListener('click', showList);
+
+        function showSection(name) {
+            document.getElementById('write-section').style.display = name === 'write' ? 'block' : 'none';
+            document.getElementById('list-section').style.display = name === 'list' ? 'block' : 'none';
+            document.getElementById('read-section').style.display = name === 'read' ? 'block' : 'none';
+        }
+
+        function showList() {
+            showSection('list');
+            renderNovelList();
+            updateStats();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            showList();
+        }
+
+        // ===== 字数统计 =====
+        document.getElementById('novel-content').addEventListener('input', updateWordCount);
+        function updateWordCount() {
+            const content = document.getElementById('novel-content').value;
+            const count = content.replace(/\s/g, '').length;
+            document.getElementById('word-count').textContent = `字数：${count.toLocaleString()}`;
+        }
+
+        // ===== 保存小说 =====
+        function saveNovel() {
+            const title = document.getElementById('novel-title').value.trim();
+            const content = document.getElementById('novel-content').value.trim();
+            if (!title) { showToast('⚠️ 请输入标题！'); return; }
+            if (!content) { showToast('⚠️ 请输入内容！'); return; }
+
+            if (editingId !== null) {
+                // 编辑模式
+                const idx = novels.findIndex(n => n.id === editingId);
+                if (idx !== -1) {
+                    novels[idx].title = title;
+                    novels[idx].content = content;
+                    novels[idx].updated = new Date().toLocaleDateString();
+                    novels[idx].wordCount = content.replace(/\s/g, '').length;
+                }
+                editingId = null;
+                showToast('✅ 修改已保存！');
+            } else {
+                // 新建模式
+                const novel = {
+                    id: Date.now(),
+                    title,
+                    content,
+                    date: new Date().toLocaleDateString(),
+                    updated: new Date().toLocaleDateString(),
+                    wordCount: content.replace(/\s/g, '').length
+                };
+                novels.unshift(novel);
+                showToast('✅ 保存成功！');
+            }
+            localStorage.setItem('novels', JSON.stringify(novels));
+            showList();
+        }
+
+        // ===== 渲染统计 =====
+        function updateStats() {
+            document.getElementById('stat-count').textContent = novels.length;
+            const total = novels.reduce((s, n) => s + (n.wordCount || 0), 0);
+            document.getElementById('stat-words').textContent = total >= 10000
+                ? (total / 10000).toFixed(1) + 'w'
+                : total.toLocaleString();
+            document.getElementById('stat-latest').textContent =
+                novels.length ? novels[0].updated || novels[0].date : '—';
+        }
+
+        // ===== 渲染小说列表 =====
+        function renderNovelList(filter = '') {
+            const listDiv = document.getElementById('novel-list');
+            const filtered = novels.filter(n => n.title.toLowerCase().includes(filter.toLowerCase()));
+
+            if (filtered.length === 0) {
+                listDiv.innerHTML = novels.length === 0
+                    ? `<div class="empty-tip"><div class="emoji">📝</div><p>还没有小说，快去写一篇吧！</p></div>`
+                    : `<div class="empty-tip"><div class="emoji">🔍</div><p>没有找到匹配的小说</p></div>`;
+                return;
+            }
+
+            listDiv.innerHTML = filtered.map(novel => `
+                <div class="novel-card">
+                    <div class="novel-info" onclick="readNovel(${novel.id})">
+                        <h3>${escapeHtml(novel.title)}</h3>
+                        <p>📅 创建：${novel.date}　✏️ 更新：${novel.updated || novel.date}　📝 字数：${(novel.wordCount || 0).toLocaleString()}</p>
+                    </div>
+                    <div class="novel-actions">
+                        <button class="btn btn-warn" onclick="editNovel(${novel.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="openDeleteModal(${novel.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== 搜索 =====
+        document.getElementById('search-input').addEventListener('input', function () {
+            renderNovelList(this.value);
+        });
+
+        // ===== 阅读小说 =====
+        function readNovel(id) {
+            const novel = novels.find(n => n.id === id);
+            if (!novel) return;
+            currentId = id;
+            document.getElementById('read-title').textContent = novel.title;
+            document.getElementById('read-meta').textContent =
+                `📅 创建：${novel.date}　✏️ 更新：${novel.updated || novel.date}　📝 字数：${(novel.wordCount || 0).toLocaleString()}`;
+            document.getElementById('read-content').textContent = novel.content;
+            document.getElementById('read-content').style.fontSize = fontSize + 'px';
+            showSection('read');
+            window.scrollTo(0, 0);
+        }
+
+        // ===== 字体大小 =====
+        function changeFontSize(delta) {
+            fontSize = Math.max(12, Math.min(28, fontSize + delta));
+            localStorage.setItem('fontSize', fontSize);
+            document.getElementById('read-content').style.fontSize = fontSize + 'px';
+        }
+
+        // ===== 阅读进度条 =====
+        window.addEventListener('scroll', () => {
+            const sect = document.getElementById('read-section');
+            if (sect.style.display === 'none') {
+                document.getElementById('progress-bar').style.width = '0%';
+                return;
+            }
+            const scrollTop = window.scrollY;
+            const docH = document.documentElement.scrollHeight - window.innerHeight;
+            document.getElementById('progress-bar').style.width = docH > 0 ? (scrollTop / docH * 100) + '%' : '0%';
+        });
+
+        // ===== 编辑小说 =====
+        function editNovel(id) {
+            const novel = novels.find(n => n.id === id);
+            if (!novel) return;
+            editingId = id;
+            document.getElementById('write-title').textContent = '✏️ 编辑小说';
+            document.getElementById('novel-title').value = novel.title;
+            document.getElementById('novel-content').value = novel.content;
+            updateWordCount();
+            showSection('write');
+        }
+
+        function editCurrentNovel() {
+            if (currentId) editNovel(currentId);
+        }
+
+        // ===== 删除小说 =====
+        function openDeleteModal(id) {
+            currentId = id;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+        }
+
+        function deleteNovel() {
+            novels = novels.filter(n => n.id !== currentId);
+            localStorage.setItem('novels', JSON.stringify(novels));
+            closeModal();
+            showToast('🗑 已删除');
+            showList();
+        }
+
+        // ===== XSS 防护 =====
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // ===== 初始化 =====
+        showList();
+    </script>
+</body>
+</html>
