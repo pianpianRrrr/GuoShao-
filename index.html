@@ -387,12 +387,12 @@ function renderList() {
   stats.textContent = db.length + ' 篇'
 
   list.innerHTML = db.map((n, i) => `
-    <div class="novel-card ${n.password ? 'locked' : ''}" onclick="read(${i})">
+    <div class="novel-card ${n.password && n.password.trim() ? 'locked' : ''}" onclick="read(${i})">
       <h3>${escapeHtml(n.title)}</h3>
       <div class="meta">
         <span>📅 ${n.time || '未知时间'}</span>
         <span>📝 ${n.content.length} 字</span>
-        ${n.password ? '<span>🔒 已加密</span>' : ''}
+        ${n.password && n.password.trim() ? '<span>🔒 已加密</span>' : ''}
       </div>
     </div>
   `).join('')
@@ -400,7 +400,7 @@ function renderList() {
 
 function read(i) {
   const n = db[i]
-  if (n.password) {
+  if (n && n.password && n.password.trim() !== '') {
     // 有密码，弹出验证
     pendingNovelIndex = i
     document.getElementById('modalNovelTitle').textContent = n.title
@@ -423,19 +423,27 @@ function doRead(i) {
 
 function closeModal() {
   document.getElementById('passwordModal').classList.remove('show')
-  pendingNovelIndex = null
+  setTimeout(() => { pendingNovelIndex = null }, 300)
 }
 
 function confirmPassword() {
   const input = document.getElementById('passwordInput').value
   const novel = db[pendingNovelIndex]
   
-  if (input === novel.password) {
+  if (!novel) {
+    showToast('❌ 加载失败，请重试')
     closeModal()
-    doRead(pendingNovelIndex)
+    return
+  }
+  
+  if (input.trim() === novel.password.trim()) {
+    const idx = pendingNovelIndex
+    closeModal()
+    setTimeout(() => doRead(idx), 50)
   } else {
     showToast('❌ 密码错误！')
     document.getElementById('passwordInput').value = ''
+    document.getElementById('passwordInput').focus()
   }
 }
 
@@ -449,7 +457,7 @@ document.getElementById('passwordInput').addEventListener('keyup', function(e) {
 async function save() {
   const title = document.getElementById('title').value.trim()
   const content = document.getElementById('content').value.trim()
-  const password = document.getElementById('password').value
+  const password = document.getElementById('password').value.trim()
 
   if (!title) {
     showToast('⚠️ 请输入书名')
